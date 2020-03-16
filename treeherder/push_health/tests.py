@@ -17,6 +17,7 @@ from treeherder.push_health.similar_jobs import (job_to_dict,
 from treeherder.push_health.utils import (clean_config,
                                           clean_platform,
                                           clean_test)
+from treeherder.webapp.api.utils import REPO_GROUPS
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +72,7 @@ def get_history(failure_classification_id, push_date, num_days, option_map, repo
     else:
         previous_failures = json.loads(previous_failures_json)
 
-    return previous_failures, cache_key
+    return previous_failures
 
 
 # For each failure item in ``tests``, we have 3 categories of jobs that are associated with it in order
@@ -182,22 +183,23 @@ def has_line(failure_line, log_line_list):
     return next((find_line for find_line in log_line_list if find_line['line_number'] == failure_line.line), False)
 
 
-def get_test_failures(push, repository_ids):
+def get_test_failures(push, parent_push=None):
     logger.info('Getting test failures for push: {}'.format(push.id))
     # query for jobs for the last two weeks excluding today
     # find tests that have failed in the last 14 days
     # this is very cache-able for reuse on other pushes.
 
+    repository_ids = REPO_GROUPS['trunk']
     # option_map is used to map platforms for the job.option_collection_hash
     option_map = OptionCollection.objects.get_option_collection_map()
     push_date = push.time.date()
-    intermittent_history, cache_key = get_history(
+    intermittent_history = get_history(
         4,
         push_date,
         intermittent_history_days,
         option_map,
         repository_ids)
-    fixed_by_commit_history, cache_key = get_history(
+    fixed_by_commit_history = get_history(
         2,
         push_date,
         fixed_by_commit_history_days,
@@ -228,8 +230,21 @@ def get_test_failures(push, repository_ids):
     # If we have failed tests that have also passed, we gather them both.  This helps us determine
     # if a job is intermittent based on the current push results.
     set_matching_passed_jobs(filtered_push_failures, push)
-
     failures = get_grouped(filtered_push_failures)
+
+    if parent_push:
+        # Since there is a parent_push, we want to mark all failures with whether or not they also
+        # exist in the parent.
+        parent_test_failures = get_test_failures(parent_push)
+        for classification, failure_group in failures.items():
+            parent_failure_group = parent_test_failures[classification]
+            failure_keys = {fail['key'] for fail in failure_group}
+            parent_failure_keys = {fail['key'] for fail in parent_failure_group}
+            both = list(failure_keys.intersection(parent_failure_keys))
+
+            for failure in failure_group:
+                failure['failedInParent'] = failure['key'] in both
+
     failures['unsupported'] = unsupported_jobs
 
     return failures

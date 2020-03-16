@@ -331,7 +331,8 @@
                 "push_id": 630837,
                 "job_type_name": "test-linux64/debug-mochitest-browser-chrome-e10s-15",
                 "job_type_symbol": "bc15",
-                "platform": "linux64"
+                "platform": "linux64",
+                "failedInParent": true
               }
             ],
             "passJobs": [

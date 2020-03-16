@@ -17,6 +17,7 @@ export default class TestMetric extends React.PureComponent {
       expanded,
       setExpanded,
       searchStr,
+      showParentMatches,
     } = this.props;
     const { name, result, details } = data;
     const { needInvestigation, intermittent, unsupported } = details;
@@ -44,6 +45,7 @@ export default class TestMetric extends React.PureComponent {
             hasRetriggerAll
             notify={notify}
             searchStr={searchStr}
+            showParentMatches={showParentMatches}
           />
           <ClassificationGroup
             group={intermittent}
@@ -57,6 +59,7 @@ export default class TestMetric extends React.PureComponent {
             user={user}
             notify={notify}
             searchStr={searchStr}
+            showParentMatches={showParentMatches}
           />
           <UnsupportedGroup
             group={unsupported}
@@ -82,4 +85,5 @@ TestMetric.propTypes = {
   setExpanded: PropTypes.func.isRequired,
   expanded: PropTypes.bool.isRequired,
   searchStr: PropTypes.string.isRequired,
+  showParentMatches: PropTypes.bool.isRequired,
 };

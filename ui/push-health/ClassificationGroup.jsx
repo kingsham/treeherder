@@ -91,6 +91,7 @@ class ClassificationGroup extends React.PureComponent {
       notify,
       currentRepo,
       searchStr,
+      showParentMatches,
     } = this.props;
     const expandIcon = detailsShowing ? faMinusSquare : faPlusSquare;
     const expandTitle = detailsShowing
@@ -231,6 +232,7 @@ class ClassificationGroup extends React.PureComponent {
               currentRepo={currentRepo}
               notify={notify}
               searchStr={searchStr}
+              showParentMatches={showParentMatches}
             />
           </div>
         </Collapse>
@@ -247,6 +249,8 @@ ClassificationGroup.propTypes = {
   revision: PropTypes.string.isRequired,
   user: PropTypes.object.isRequired,
   notify: PropTypes.func.isRequired,
+  searchStr: PropTypes.string.isRequired,
+  showParentMatches: PropTypes.bool.isRequired,
   hasRetriggerAll: PropTypes.bool,
   expanded: PropTypes.bool,
   className: PropTypes.string,
