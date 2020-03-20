@@ -142,9 +142,10 @@ export default class PerfSeriesModel {
       const url = tcUrl.api(
         'queue',
         'v1',
-        `/task/${taskId}/${run}/public/test-info/perfherder-data.json`,
+        `/task/${taskId}/runs/${run}/artifacts/public/test_info/perfherder-data.json`,
       );
-
+      const testUrl = `https://firefox-ci-tc.services.mozilla.com/api/queue/v1/task/${taskId}/runs/${run}/artifacts/public/test_info/perfherder-data.json`;
+      console.log(url === testUrl);
       const replicateDatum = await getData(url);
       return replicateDatum;
     }
