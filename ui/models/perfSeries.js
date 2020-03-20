@@ -1,9 +1,11 @@
 import queryString from 'query-string';
+import tcLibUrls from 'taskcluster-lib-urls';
 
 import { getProjectUrl } from '../helpers/location';
-import { getApiUrl, createQueryParams } from '../helpers/url';
+import { createQueryParams, getArtifactsUrl } from '../helpers/url';
 import { getData } from '../helpers/http';
 
+import JobModel from './job';
 import OptionCollectionModel from './optionCollection';
 
 export const getTestName = function getTestName(signatureProps) {
@@ -131,21 +133,39 @@ export default class PerfSeriesModel {
     });
   }
 
-  static getReplicateData(params) {
-    const searchParams = { ...params, value: 'perfherder-data.json' };
+  static async getReplicateData({ jobId, rootUrl }) {
+    const { data } = await JobModel.getList({ id: jobId });
 
-    return fetch(
-      `${getApiUrl('/jobdetail/')}?${queryString.stringify(searchParams)}`,
-    ).then(async resp => {
-      if (resp.ok) {
-        const data = await resp.json();
+    if (data.length) {
+      const { task_id: taskId, retry_id: run } = data[0];
+      const tcUrl = tcLibUrls.withRootUrl(rootUrl);
+      const url = tcUrl.api(
+        'queue',
+        'v1',
+        `/task/${taskId}/${run}/public/test-info/perfherder-data.json`,
+      );
 
-        if (data.results.length) {
-          const { url } = data.results[0];
-          return fetch(url).then(resultResp => resultResp.json());
-        }
-      }
-      return Promise.reject('No replicate data found');
-    });
+      const replicateDatum = await getData(url);
+      return replicateDatum;
+    }
+    // return Promise.reject('No replicate data found');
   }
+
+  // static getReplicateData(params) {
+  //   const searchParams = { ...params, value: 'perfherder-data.json' };
+
+  //   return fetch(
+  //     `${getApiUrl('/jobdetail/')}?${queryString.stringify(searchParams)}`,
+  //   ).then(async resp => {
+  //     if (resp.ok) {
+  //       const data = await resp.json();
+
+  //       if (data.results.length) {
+  //         const { url } = data.results[0];
+  //         return fetch(url).then(resultResp => resultResp.json());
+  //       }
+  //     }
+  //     return Promise.reject('No replicate data found');
+  //   });
+  // }
 }

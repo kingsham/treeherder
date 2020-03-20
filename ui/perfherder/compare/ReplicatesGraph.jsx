@@ -48,7 +48,7 @@ export default class ReplicatesGraph extends React.Component {
 
   fetchReplicateGraphData = async () => {
     const {
-      projectName,
+      project,
       revision,
       subtestSignature,
       getData,
@@ -59,7 +59,7 @@ export default class ReplicatesGraph extends React.Component {
     const perfDatumResponse = await getData(
       createApiUrl(endpoints.summary, {
         revision,
-        repository: projectName,
+        repository: project.name,
         signature: subtestSignature,
       }),
     );
@@ -70,8 +70,9 @@ export default class ReplicatesGraph extends React.Component {
       return { replicateData };
     }
     const numRuns = perfDatum.values.length;
+
     const replicatePromises = perfDatum.job_ids.map(jobId =>
-      getReplicateData({ job_id: jobId }),
+      getReplicateData({ jobId, rootUrl: project.tc_root_url }),
     );
 
     return Promise.all(replicatePromises).then(
@@ -167,7 +168,7 @@ export default class ReplicatesGraph extends React.Component {
 
 ReplicatesGraph.propTypes = {
   title: PropTypes.string.isRequired, // TODO: stands for targetId
-  projectName: PropTypes.string.isRequired,
+  project: PropTypes.shape({}).isRequired,
   revision: PropTypes.string.isRequired,
   subtestSignature: PropTypes.string.isRequired,
   filters: PropTypes.shape({
